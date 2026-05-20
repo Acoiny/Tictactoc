@@ -1,5 +1,6 @@
 #include "game.hpp"
 
+#include <SFML/System/Angle.hpp>
 #include <cstring>
 #include <iostream>
 
@@ -9,7 +10,7 @@ Game::Game()
 {
     const char *fontPath = "/usr/share/fonts/truetype/DejaVuSans.ttf";
 
-    if (!m_font.loadFromFile(fontPath))
+    if (!m_font.openFromFile(fontPath))
     {
         std::cerr << "Failed to load font from '" << fontPath << "'"
                   << std::endl;
@@ -28,9 +29,9 @@ void Game::render(sf::RenderWindow &win, int width, int height)
 
     for (int i = 1; i < 3; i++)
     {
-        vertLine.setPosition(i * fieldWidth, 0);
+        vertLine.setPosition({static_cast<float>(i * fieldWidth), 0});
         win.draw(vertLine);
-        horLine.setPosition(0, i * fieldHeight);
+        horLine.setPosition({0, static_cast<float>(i * fieldHeight)});
         win.draw(horLine);
     }
 
@@ -43,9 +44,10 @@ void Game::render(sf::RenderWindow &win, int width, int height)
             auto col = m_players[0].getColor();
 
             circle.setFillColor(col);
-            circle.setOrigin(circle.getRadius(), circle.getRadius());
-            circle.setPosition((i % 3) * fieldWidth + fieldWidth / 2,
-                               (i / 3) * fieldHeight + fieldHeight / 2);
+            circle.setOrigin({circle.getRadius(), circle.getRadius()});
+            circle.setPosition(
+                {static_cast<float>((i % 3) * fieldWidth + fieldWidth / 2),
+                 static_cast<float>((i / 3) * fieldHeight + fieldHeight / 2)});
 
             // if fading, make it transparent
             if (i == m_players[0].getFadingPosition())
@@ -60,60 +62,69 @@ void Game::render(sf::RenderWindow &win, int width, int height)
             auto col = m_players[1].getColor();
 
             cross.setFillColor(col);
-            cross.setOrigin(cross.getSize().x / 2, cross.getSize().y / 2);
-            cross.setPosition((i % 3) * fieldWidth + fieldWidth / 2,
-                              (i / 3) * fieldHeight + fieldHeight / 2);
+            cross.setOrigin({cross.getSize().x / 2, cross.getSize().y / 2});
+            cross.setPosition(
+                {static_cast<float>((i % 3) * fieldWidth + fieldWidth / 2),
+                 static_cast<float>((i / 3) * fieldHeight + fieldHeight / 2)});
 
             // if fading, make it transparent
             if (i == m_players[1].getFadingPosition())
                 cross.setFillColor(col * sf::Color(255, 255, 255, 128));
 
-            cross.rotate(45);
+            cross.rotate(sf::degrees(45));
             win.draw(cross);
 
             // draw two half pieces, so the middle isn't drawn twice
             // otherwise transparency will not work correctly
             cross.setSize(sf::Vector2f(fieldWidth / 3, fieldHeight / 3));
-            cross.rotate(90);
+            cross.rotate(sf::degrees(90));
             win.draw(cross);
-            cross.rotate(180);
+            cross.rotate(sf::degrees(180));
             win.draw(cross);
         }
     }
 
     if (m_state == Gamestate::Player1Won)
     {
-        sf::Text text("Player 1 won!", m_font, 30);
+        sf::Text text(m_font);
+        // text.setScale({30, 30});
+        text.setString("Player 1 won!");
         text.setFillColor(sf::Color::Black);
-        text.setPosition(width / 2 - text.getGlobalBounds().width / 2,
-                         height / 2 - text.getGlobalBounds().height / 2);
+        text.setPosition({width / 2 - text.getGlobalBounds().size.x / 2,
+                          height / 2 - text.getGlobalBounds().size.y / 2});
         win.draw(text);
     }
     else if (m_state == Gamestate::Player2Won)
     {
-        sf::Text text("Player 2 won!", m_font, 30);
+        sf::Text text(m_font);
+        // text.setScale({30, 30});
+        text.setString("Player 2 won!");
         text.setFillColor(sf::Color::Black);
-        text.setPosition(width / 2 - text.getGlobalBounds().width / 2,
-                         height / 2 - text.getGlobalBounds().height / 2);
+        text.setPosition({width / 2 - text.getGlobalBounds().size.x / 2,
+                          height / 2 - text.getGlobalBounds().size.y / 2});
         win.draw(text);
     }
     else if (m_state == Gamestate::Draw)
     {
-        sf::Text text("Draw!", m_font, 30);
+        sf::Text text(m_font);
+        // text.setScale({30, 30});
+        text.setString("Draw!");
         text.setFillColor(sf::Color::Black);
-        text.setPosition(width / 2 - text.getGlobalBounds().width / 2,
-                         height / 2 - text.getGlobalBounds().height / 2);
+        text.setPosition({width / 2 - text.getGlobalBounds().size.x / 2,
+                          height / 2 - text.getGlobalBounds().size.y / 2});
         win.draw(text);
     }
 
     if (m_state != Gamestate::Running)
     {
-        sf::Text text2("Press Space to restart", m_font, 30);
+        sf::Text text(m_font);
+        // text.setScale({30, 30});
+        text.setString("Press space to restart");
 
-        text2.setFillColor(sf::Color::Black);
-        text2.setPosition(width / 2 - text2.getGlobalBounds().width / 2,
-                          height / 2 - text2.getGlobalBounds().height / 2 - 30);
-        win.draw(text2);
+        text.setFillColor(sf::Color::Black);
+        text.setPosition({width / 2 - text.getGlobalBounds().size.x / 2,
+                          height / 2 - text.getGlobalBounds().size.y / 2});
+        win.draw(text);
     }
 }
 
